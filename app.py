@@ -19,13 +19,13 @@ def prepare_recommendation_model(data):
     data['combined_features'] = data['title'] + " " + data['category'] + " " + data['genre'] + " " + data['summary']
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf_vectorizer.fit_transform(data['combined_features'])
-    model = NearestNeighbors(n_neighbors=4, metric='cosine')
+    model = NearestNeighbors(n_neighbors=3, metric='cosine')
     model.fit(tfidf_matrix)
     return model, tfidf_vectorizer
 
 # Function to get recommendations based on video details
 def get_recommendations(video, model, vectorizer, data, n_recommendations=3):
-    combined_features = video['title'] + " " + video['category'] + " " + video['genre'] + " " + video['summary']
+    combined_features = video['title'] + " " + video['category'] + " "  + " " + video['summary']
     tfidf_matrix = vectorizer.transform([combined_features])
     distances, indices = model.kneighbors(tfidf_matrix, n_neighbors=n_recommendations + 1)
     recommended_indices = indices.flatten()[1:]  # Skip the first index since it's the video itself
@@ -33,8 +33,8 @@ def get_recommendations(video, model, vectorizer, data, n_recommendations=3):
 
 # Main Streamlit app
 def main():
-    st.title("🎬 Welcome to FLIXtube Movies")
-    st.subheader("Explore, Watch, and Discover Recommended Movies!")
+    st.title("🎬 Welcome to FLIXtube Videos")
+    st.subheader("Explore, Watch, and Discover Recommended Videos!")
 
     # Load all videos from the database
     data = extract.load_data()
@@ -45,15 +45,12 @@ def main():
     # Sidebar for filters
     st.sidebar.header("Filter Movies")
     selected_category = st.sidebar.radio("Select Category", ["All"] + sorted(data['category'].unique().tolist()))
-    selected_genre = st.sidebar.radio("Select Genre", ["All"] + sorted(data['genre'].unique().tolist()))
-
+    
     # Filter based on sidebar selection
     filtered_data = data.copy()
     if selected_category != "All":
         filtered_data = filtered_data[filtered_data['category'] == selected_category]
-    if selected_genre != "All":
-        filtered_data = filtered_data[filtered_data['genre'] == selected_genre]
-
+    
     # Search section using a select box
     video_titles = filtered_data['title'].unique().tolist()
     selected_title = st.selectbox("Select a movie title to search", [""] + video_titles)
