@@ -100,7 +100,7 @@ def display_video_with_recommendations(video, data):
         )
         # Display video details
         st.write(f"**Category:** {video['category']}")
-        st.write(f"**Genre:** {video['genre']}")
+        
         st.write(f"**Summary:** {video['summary']}")
 
     # Prepare and display recommendations for this video
