@@ -71,7 +71,7 @@ def main():
                     unsafe_allow_html=True
                 )
             st.write(f"**Category:** {row['category']}")
-            st.write(f"**Genre:** {row['genre']}")
+            
             st.write(f"**Summary:** {row['summary']}")
             st.write("---")  # Divider for better readability
 
