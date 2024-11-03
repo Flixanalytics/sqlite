@@ -1,0 +1,123 @@
+/* Primary Colors */
+:root {
+    --primary-color: #FF7F50; /* Orange */
+    --background-color: #1A1A1A; /* Dark background */
+    --text-color: #F1F1F1; /* Light text color */
+    --card-color: #2A2A2A; /* Slightly lighter for cards */
+    --highlight-color: #FFA500; /* Highlight orange */
+}
+
+/* Global Style */
+body {
+    font-family: "Helvetica Neue", sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Neumorphic Shadowing */
+.neumorph {
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4),
+                -5px -5px 15px rgba(60, 60, 60, 0.2);
+}
+.neumorph-inset {
+    box-shadow: inset 5px 5px 15px rgba(0, 0, 0, 0.4),
+                inset -5px -5px 15px rgba(60, 60, 60, 0.2);
+}
+
+/* Sidebar */
+.stSidebar {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 12px;
+    color: var(--text-color);
+}
+.stSidebar h2, .stSidebar h3 {
+    color: var(--primary-color);
+}
+.stSidebar button, .stSidebar select, .stSidebar input {
+    background-color: var(--highlight-color);
+    color: var(--background-color);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 12px;
+    transition: transform 0.2s ease;
+}
+.stSidebar button:hover, .stSidebar select:hover, .stSidebar input:hover {
+    transform: scale(1.05);
+}
+
+/* Main Title and Header */
+h1, h2, h3 {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+h1 {
+    font-size: 2.4em;
+}
+h2 {
+    font-size: 2em;
+}
+h3 {
+    font-size: 1.7em;
+}
+
+/* Buttons */
+.stButton > button {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    transition: transform 0.2s ease;
+}
+.stButton > button:hover {
+    transform: scale(1.05);
+}
+
+/* Video Card */
+.video-card {
+    background-color: var(--card-color);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.4),
+                -10px -10px 20px rgba(60, 60, 60, 0.2);
+    transition: transform 0.2s ease;
+}
+.video-card:hover {
+    transform: translateY(-8px);
+}
+.video-card h3 {
+    color: var(--highlight-color);
+}
+.video-card p {
+    font-size: 1em;
+    color: var(--text-color);
+}
+.video-card img {
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+/* Expander for Watch Video */
+.stExpander {
+    background-color: var(--card-color);
+    border-radius: 12px;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4),
+                -5px -5px 15px rgba(60, 60, 60, 0.2);
+}
+.stExpander > div {
+    padding: 15px;
+}
+
+/* Footer Info */
+.stInfo {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: bold;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
+                -5px -5px 15px rgba(255, 165, 0, 0.2);
+}

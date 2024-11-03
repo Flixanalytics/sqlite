@@ -5,9 +5,9 @@ from sklearn.neighbors import NearestNeighbors
 import extract  # Importing functions from extractor.py
 
 # Page configuration
-st.set_page_config(page_title='FLIXtube Movies', page_icon='🎬', layout='wide')
+st.set_page_config(page_title='FlixTubee', page_icon='🎬', layout='wide')
 
-# CSS for custom styling
+# Custom CSS for styling
 def local_css(file_name):
     with open(file_name, "r") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -16,108 +16,126 @@ local_css("style.css")
 
 # Function to prepare recommendation model
 def prepare_recommendation_model(data):
-    data['combined_features'] = data['title'] + " " + data['category'] + " " + data['genre'] + " " + data['summary']
+    data['combined_features'] = data['title'] + " " + data['category'] + " " + data['summary']
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf_vectorizer.fit_transform(data['combined_features'])
     model = NearestNeighbors(n_neighbors=3, metric='cosine')
     model.fit(tfidf_matrix)
     return model, tfidf_vectorizer
 
-# Function to get recommendations based on video details
-def get_recommendations(video, model, vectorizer, data, n_recommendations=3):
-    combined_features = video['title'] + " " + video['category'] + " "  + " " + video['summary']
-    tfidf_matrix = vectorizer.transform([combined_features])
-    distances, indices = model.kneighbors(tfidf_matrix, n_neighbors=n_recommendations + 1)
-    recommended_indices = indices.flatten()[1:]  # Skip the first index since it's the video itself
-    return data.iloc[recommended_indices]
+# Updated get_recommendations function
+def get_recommendations(title, model, tfidf_vectorizer, data, n_recommendations=3):
+    try:
+        tfidf_matrix = tfidf_vectorizer.transform([title])
+        distances, indices = model.kneighbors(tfidf_matrix, n_neighbors=n_recommendations + 1)
+        recommended_indices = indices.flatten()[1:]  # Skip the first index as it is the video itself
+        recommended_videos = data.iloc[recommended_indices]
+        return recommended_videos
+    except Exception as e:
+        st.error(f"Error in recommendations: {str(e)}")
+        return pd.DataFrame()
 
 # Main Streamlit app
 def main():
-    st.title("🎬 Welcome to FLIXtube Videos")
-    st.subheader("Explore, Watch, and Discover Recommended Videos!")
+    st.title("FlixAnalytics Video Explorer")
 
-    # Load all videos from the database
+    # Sidebar with navigation and filters
+    st.sidebar.header("FlixAnalytics")
+    st.sidebar.write("Your go-to analytics platform for exploring and discovering videos.")
+    
+    # Sidebar filters
+    filter_options = ["Python", "Animation", "Football", "Machine Learning", "Fantasy", "Musical", "Other", "Tutorial"]
+    selected_filter = st.sidebar.selectbox("Filter by Category", ["All"] + filter_options)
+
+    # Sidebar navigation for sections
+    if st.sidebar.button("Overview"):
+        st.session_state['section'] = 'overview'
+    if st.sidebar.button("Search Videos"):
+        st.session_state['section'] = 'search'
+
+    # About FlixAnalytics
+    st.sidebar.subheader("About FlixAnalytics")
+    st.sidebar.info("FlixAnalytics is a data-driven company specializing in providing analytics and recommendations for various content platforms.")
+
+    # Contact information
+    st.sidebar.subheader("Contact Us")
+    st.sidebar.write("📧 flixanalytics@yahoo.com")
+
+    
+    # Load data
     data = extract.load_data()
     if data.empty:
         st.warning("No videos available in the database.")
         return
 
-    # Sidebar for filters
-    st.sidebar.header("Filter Movies")
-    selected_category = st.sidebar.radio("Select Category", ["All"] + sorted(data['category'].unique().tolist()))
-    
-    # Filter based on sidebar selection
-    filtered_data = data.copy()
-    if selected_category != "All":
-        filtered_data = filtered_data[filtered_data['category'] == selected_category]
-    
-    # Search section using a select box
-    video_titles = filtered_data['title'].unique().tolist()
-    selected_title = st.selectbox("Select a movie title to search", [""] + video_titles)
-    search_button = st.button("Search")
-
-    # Display filtered data
-    st.subheader("Available Movies")
-    if filtered_data.empty:
-        st.warning("No movies available for the selected filters.")
+    # Apply selected filter to the data
+    if selected_filter != "All":
+        filtered_data = data[data['category'] == selected_filter]
     else:
-        for index, row in filtered_data.iterrows():
-            st.markdown(f"### {row['title']}")
-            st.image(row['thumbnail'], use_column_width=True)
-            # Create an expander for video playback
-            with st.expander("Watch Video", expanded=False):
+        filtered_data = data
+
+    # Default overview page showing all videos with filter applied
+    if st.session_state.get('section', 'overview') == 'overview':
+        st.subheader("Overview: All Videos")
+
+        if filtered_data.empty:
+            st.warning("No videos available for the selected category.")
+        else:
+            for index, row in filtered_data.iterrows():
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.image(row['thumbnail'], use_column_width=True)
+                with col2:
+                    st.subheader(row['title'])
+                    st.write(f"**Category:** {row['category']}")
+                    st.write(f"**Summary:** {row['summary']}")
+                    with st.expander("Watch Video"):
+                        st.markdown(
+                            f'<iframe width="100%" height="400" src="https://www.youtube.com/embed/{row["video_id"]}" frameborder="0" allowfullscreen></iframe>',
+                            unsafe_allow_html=True
+                        )
+                st.markdown("---")  # Divider between videos
+
+    # Search section
+    elif st.session_state.get('section') == 'search':
+        st.subheader("Search for Videos")
+        video_titles = filtered_data['title'].unique().tolist()
+        video_title_input = st.selectbox("Select a video title", [""] + video_titles)
+        search_button = st.button("Search")
+
+        if search_button and video_title_input:
+            selected_video = filtered_data[filtered_data['title'] == video_title_input].iloc[0]
+            st.subheader(f"{selected_video['title']}")
+            st.image(selected_video['thumbnail'], use_column_width=True)
+            with st.expander("Watch Video"):
                 st.markdown(
-                    f'<iframe width="100%" height="400" src="https://www.youtube.com/embed/{row["video_id"]}" frameborder="0" allowfullscreen></iframe>',
+                    f'<iframe width="100%" height="400" src="https://www.youtube.com/embed/{selected_video["video_id"]}" frameborder="0" allowfullscreen></iframe>',
                     unsafe_allow_html=True
                 )
-            st.write(f"**Category:** {row['category']}")
             
-            st.write(f"**Summary:** {row['summary']}")
-            st.write("---")  # Divider for better readability
-
-    # Check if the search button was clicked
-    if search_button:
-        if selected_title:
-            searched_video = filtered_data[filtered_data['title'] == selected_title]
+            # Display recommendations below the selected video
+            st.subheader("You Might Also Like This..")
+            model, tfidf_vectorizer = prepare_recommendation_model(data)
+            recommended_videos = get_recommendations(video_title_input, model, tfidf_vectorizer, data)
             
-            if not searched_video.empty:
-                st.subheader("Selected Video")
-                display_video_with_recommendations(searched_video.iloc[0], data)
+            if not recommended_videos.empty:
+                for index, row in recommended_videos.iterrows():
+                    with st.expander(f"{row['title']}"):
+                        st.image(row['thumbnail'], width=200)
+                        st.markdown(
+                            f'<iframe width="100%" height="400" src="https://www.youtube.com/embed/{row["video_id"]}" frameborder="0" allowfullscreen></iframe>',
+                            unsafe_allow_html=True
+                        )
             else:
-                st.warning("No results found for the selected title.")
-        else:
-            st.warning("Please select a movie title before searching.")
+                st.warning("No recommendations found.")
 
-# Function to display video and recommendations
-def display_video_with_recommendations(video, data):
-    # Use an expander to show the selected video
-    with st.expander(f"Watch {video['title']}", expanded=True):
-        st.image(video['thumbnail'], use_column_width=True)
-        # Display the video using an iframe
-        st.markdown(
-            f'<iframe width="100%" height="400" src="https://www.youtube.com/embed/{video["video_id"]}" frameborder="0" allowfullscreen></iframe>',
-            unsafe_allow_html=True
-        )
-        # Display video details
-        st.write(f"**Category:** {video['category']}")
-        
-        st.write(f"**Summary:** {video['summary']}")
+    # # Refresh button to reload data
+    # if st.button("Refresh Data"):
+    #     st.cache_data.clear()
+    #     data = extract.load_data()
+    #     st.rerun()
 
-    # Prepare and display recommendations for this video
-    st.subheader("Recommended Movies")
-    model, vectorizer = prepare_recommendation_model(data)
-    recommendations = get_recommendations(video, model, vectorizer, data)
-
-    # Show recommendations only for the searched video
-    with st.expander("You Might Also Like", expanded=True):
-        for _, rec in recommendations.iterrows():
-            st.markdown(f"**{rec['title']}**")
-            st.image(rec['thumbnail'], width=150)
-            st.markdown(
-                f'<iframe width="100%" height="200" src="https://www.youtube.com/embed/{rec["video_id"]}" frameborder="0" allowfullscreen></iframe>',
-                unsafe_allow_html=True
-            )
-
-# Run the app
 if __name__ == "__main__":
+    if 'section' not in st.session_state:
+        st.session_state['section'] = 'overview'  # Default to overview section
     main()
